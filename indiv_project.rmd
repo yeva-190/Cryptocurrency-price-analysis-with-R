@@ -1,0 +1,308 @@
+---
+title: "Time series analysis of cryptocurrencies"
+author: "Yeva Tshngryan"
+date: "10/14/2021"
+output:
+  pdf_document:
+    toc: true
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(error=T, warning=F, message=F, echo=F)
+```
+
+\newpage
+
+## Overview
+The use of cryptocurrencies, AKA Digital money has increased drastically over the past years. Many are using it to buy goods and services, while others as a way to grow their capital, nevertheless it still remains a mystery for a lot of people these days. Mainly the question of "what gets cryptocurrencies pumping or dumping?". In my project I'm going to discuss, based on what price predictions are made, events that contribute to the increase and decrease of the cryptocurrency prices and what can we possibly await in the future. 
+
+## Research methodology
+
+The main tool used for data analysis and visualization was R. The visualizations and data manipulation were done mainly by using ggplot. 
+
+## Literature review
+Cryptocurrency is a form of payment that can be exchanged online for goods and services. Many companies have issued their own currencies, often called tokens, and these can be traded specifically for the good or service that the company provides. Think of them as you would arcade tokens or casino chips. You’ll need to exchange real currency for the cryptocurrency to access the good or service. 
+Cryptocurrencies work using a technology called blockchain. Blockchain is a decentralized technology spread across many computers that manages and records transactions. Part of the appeal of this technology is its security.
+Cryptocurrencies appeal to their supporters for a variety of reasons. Here are some of the most popular: 
+Supporters see cryptocurrencies such as bitcoin as the currency of the future and are racing to buy them now, presumably before they become more valuable.
+Some supporters like the fact that cryptocurrency removes central banks from managing the money supply, since over time these banks tend to reduce the value of money via inflation 
+Other supporters like the technology behind cryptocurrencies, the blockchain, because it’s a decentralized processing and recording system and can be more secure than traditional payment systems 
+Some speculators like cryptocurrencies because they’re going up in value and have no interest in the currencies’ long-term acceptance as a way to move money
+In this paper I will do general analysis of cryptocurrency prices, and also show what factors affect the pumping or dumping of them. (spoiler alert, its Elon Musk). 
+
+
+## Data
+Data was mainly derived from Investing.com. and Kaggle.
+
+## Hyphoteses
+Using derived price data and general trends I will showcase what factors contribute to "dumping" and "pumping" of cryptocurrencies. Believing that there are multiple factors contributing to whether the investors would want to invest in specific market or not, I will showcase them and what each of them means. I will try to showcase where the hype of crypto is heading as more and more people are starting to familiarize themselves with the industry. 
+
+
+
+\newpage
+## Analysis
+
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+library(ggrepel)
+library(ggcorrplot)
+library(tidyverse)
+library(cowplot)
+library(forecast)
+library("viridis") 
+
+```
+
+```{r}
+BTC_AVG <- read.csv("BTC-USD.csv")
+BTC <- read.csv("BTC.csv")
+doge <- read.csv("DOGE-USD.csv")
+BTC_Market <- read.csv("bitcoinity_data.csv")
+USDT <- read.csv("tether_csv.csv")
+NFTS <- read.csv("dataset.csv")
+
+```
+
+
+
+The best way to have a general picture of how much hype and popularity cryptocurrencies have gained over the last 5 to 10 years, we can observe the price increase of BTC from 2014, when it was not even worth 1$. Especially recently Bitcoin hit its' new all time high of 67,000 USD. That makes the percentage increase around 75500000% from 2010 til today. The visualization below helps us to better picture the Price increase, and by that also understand how much popularity the industry gained, since cryptocurrency market is based on supply and demand. 
+The figure also contains BTC Volume over the past 7 years, Volume is the sum total of actual trades taking place.
+
+
+
+```{r, fig.width=13, fig.height=5, fig.cap="Average price and volume of Bitcoin from 2014 to 2021"}
+dates <- BTC_AVG$Date
+dates1 <- as.Date(dates, "%m/%d/%Y")
+p <- ggplot(data = BTC_AVG,aes(x = dates1, y = Open, group = 1)) +
+  geom_line(aes(dates1, Open), color = "blue") +
+  geom_line(aes(dates1, Volume), color = "red") +
+  labs(x = "Date", y = "Price and Volume") +
+  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  theme(panel.background = element_rect(fill = 'white')) +
+  theme(plot.background = element_rect(fill = 'white')) +
+  theme(axis.title.x=element_text(colour="black", size = 14)) +
+  theme(axis.title.y=element_text(colour="black", size = 14)) +
+  theme_bw()
+
+
+p1 <- ggplot(data = BTC_AVG, aes(x = dates1, y = Price, group = 1)) +
+  geom_line(aes(dates1, Open), color = "blue") +
+  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
+  labs(x = "Date", y = "Price") +
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  theme(panel.background = element_rect(fill = 'white')) +
+  theme(plot.background = element_rect(fill = 'white')) +
+  theme(axis.title.x=element_text(colour="black", size = 14)) +
+  theme(axis.title.y=element_text(colour="black", size = 14)) +
+  theme_bw()
+
+plot_grid(p, p1, nrow = 2, rel_heights = c(4,3))
+
+```
+
+
+Of course, the crypto market is known to be highly volatile and just recently Bitcoin and other leading crypto coins experienced a significant drop in share price after investors began dumping mining equipment as China announced fresh regulations. The following figure showcases just how much change did BTC go through in a span of just one month in 2021.
+\
+
+
+
+```{r,  fig.width=12, fig.height=5, fig.cap="Price of BTC in 2021"}
+dates <- unique(sort(BTC$ï..Date))
+BTC$Date <- factor(BTC$ï..Date, labels = dates,  ordered = T)
+ggplot(data = BTC, aes(x = dates, y = Price, group = 1)) + 
+geom_line(aes(dates, Price)) +
+geom_point() +
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  xlab("Date") + ylab("Price") + 
+  theme(panel.background = element_rect(fill = 'white')) +
+  theme(plot.background = element_rect(fill = 'white')) +
+  theme(axis.title.x=element_text(colour="black", size = 14)) +
+  theme(axis.title.y=element_text(colour="black", size = 14)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+
+
+\newpage
+
+The volatility of the market became even more known by the launch of the first meme currency, Dogecoin. Despite it being highly satirical, a lot people consider it a legitimate investment prospect. Using the following bar chart I decided to showcase the amount of volatility Dogecoin has. The considerably higher bars also shows when viral tweets, that contributed to pumping of Dogecoin, were made, mainly by Elon Musk. This is a type of currency which is highly reliant on the news and viral tweets on the internet. 
+
+
+
+
+
+```{r, , fig.width=13, fig.height=6, fig.cap="Price of Dogecoin"}
+date1 <- doge$Date
+date2 <- as.Date(date1, "%m/%d/%Y")
+
+
+ggplot(data=doge, aes(x=date2, y=Open)) +
+  geom_bar(stat="identity", color = "darkblue", fill = "darkblue") +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) +
+  theme_bw() +
+  labs(x = "Date", y = "Price")
+
+
+
+```
+
+
+
+Here you can see some tweet examples, also examine the dates of them being made and compare with the dates of high bars. 
+
+```{r, echo = FALSE, out.width="50%"}
+library(knitr)
+include_graphics('Doge.png')
+include_graphics('Doge3.jpg')
+```
+
+
+
+\newpage
+
+To get a general picture of where the trend is heading in crypto it is important to understand the idea of Market Capitalization. For a cryptocurrency like Bitcoin, market capitalization (or market cap) is the total value of all the coins that have been mined. It's calculated by multiplying the number of coins in circulation by the current market price of a single coin. Price is just one way to measure a cryptocurrency’s value. Investors use market cap to tell a more complete story and compare value across cryptocurrencies. As a key statistic, it can indicate the growth potential of a cryptocurrency and whether it is safe to buy, compared to others. The following figure shows Market Cap of Bitcoin starting from 2010 (its' release) til Today. 
+
+
+
+\ 
+
+
+
+
+
+```{r, fig.width=12, fig.height=4, fig.cap = "Bitcoins Market Capitalization from 2010 to 2021"}
+
+Time <- BTC_Market$Time
+betterDates <- as.Date(Time, "%m/%d/%y")
+dates <- as.Date(Time, "%m/%d/%Y")
+
+
+ggplot(BTC_Market, aes(x=dates, y=Market, fill = Market)) + 
+  geom_bar(stat = "identity", width = 2)+
+  theme_bw() +
+  labs(x = "Date", y = "Market Cap")
+
+
+```
+
+
+
+
+
+\
+
+
+Large-cap cryptocurrencies are generally considered to be safe crypto investments. These are companies with a market cap of more than $10 billion. Investing in coins with large market capitalisation is usually a conservative strategy. Knowing cryptocurrency market cap might be interesting if you wish to know the scope or potential of a certain token. 
+
+
+\
+
+
+
+
+```{r, fig.width=11, fig.height=4, fig.cap= "Bitcoins Market Capitalization in 2021"}
+ggplot(BTC_Market, aes(x=betterDates, y=Market, fill = Market)) + 
+  geom_histogram(stat = "identity", bins = 20) + theme_bw() +
+  labs(x = "Date", y = "Market Cap")
+```
+
+\newpage
+
+
+The volume of a particular Cryptocurrency found on a Coin Prices Index page is simply the total amount of coins traded in the last 24 hours. The following graph shows how much the volume of USDT (most famous stablecoin) changed over the years. USDT is mainly used to trade inside of exchanges. Matt Thompson, Director of Business Development and Operations at Coinigy had this to say regarding his top pick for analyzing the crypto markets: “Volume is hands down the most important aspect outside of price.” , “Even for many other technical indicators, volume can serve as confirmation or rejection of a given hypothesis,"
+
+
+\
+
+
+
+
+
+
+```{r, fig.width=12, fig.height=5, fig.cap = "USDT Volume"}
+
+Time <- USDT$date
+dates <- as.Date(Time, "%m/%d/%Y")
+
+USDT %>% filter(dates > "2020") %>%
+ggplot(data = USDT,mapping = aes(x = dates, y = Volume, group = 1)) +
+  geom_line(aes(dates, Volume), col = "darkred") + 
+  theme_bw()
+
+
+
+```
+
+
+\
+
+
+
+
+```{r, fig.width=12, fig.height=5, fig.cap = "USDT Volume/ Density"}
+ggplot(USDT, aes(x=Volume)) +
+ geom_histogram(aes(y=..density..), colour="black", fill="white", bins = 30) +
+   geom_density(alpha=.2, fill="#FF6666") +
+  theme_bw()
+```
+
+
+
+
+\newpage
+
+An NFT or A non-fungible token is a unique and non-interchangeable unit of data stored on a digital ledger. NFTs can be associated with easily-reproducible items such as photos, videos, audio, and other types of digital files as unique items, and use Blockchain technology to give the NFT a public proof of ownership. While Traditional cryptocurrencies are available in large quantitie, I decided to also give an analysis on NFTs to show the wide range of the crypto world. The following figure shows us some of the most expensive NFTs in 2021, grouped by Type ( Gif, Photo or Video). 
+
+
+\
+
+
+
+
+
+
+```{r, fig.width = 13, fig.height= 9,  fig.cap= "Most expensive NFTs of 2021"}
+NFTS %>% filter(year > 2020) %>% filter(price > 2000) %>% 
+ggplot(NFTS, mapping = aes(x=reorder(name, price) ,y=price, fill = type)) +  geom_bar(stat="identity",position="dodge") +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) +
+  scale_color_viridis(discrete = TRUE, option = "D")+
+  scale_fill_viridis(discrete = TRUE) +
+  labs(x = "NFT", y = "Price")
+
+```
+
+
+\newpage
+
+## Conclusion and Recommendations
+From the beginning of the report, I wanted to showcase the different aspects of crytocurrencies, such as Price, Volatility, VOlume and Market Capitalization. And even new trend such as NFT, which is its own type of crypto. As we can see from the graphs, the Volume/ Price generally look the same, which shows that investors don't only look at the price when deciding to purchase something. 
+Cryptocurrency world has many different and interesting aspects and it is fairly a new sphere, which is why in the future, it will drive many more regular people like us, to familiarize ourselves with the industry. 
+
+
+
+\
+
+## References
+What is Market Cap?. https://www.coinbase.com/learn/crypto-basics/what-is-market-cap
+
+Why Traders Say Volume Is Crypto Price Indicator of Choice (Dec 23, 2018).  https://www.coindesk.com/markets/2018/12/23/why-traders-say-volume-is-crypto-price-indicator-of-choice/
+
+Non-Fungible Token (NFT) Definition (Nov 17, 2021). https://www.investopedia.com/non-fungible-tokens-nft-5115211
